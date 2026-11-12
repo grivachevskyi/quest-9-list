@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Квест з інформатики (9 клас) — § 3.1 Одновимірні масиви та списки в Python</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-code: #0b1120;
+            --primary: #38bdf8;
+            --primary-hover: #0284c7;
+            --accent: #818cf8;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 820px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+            margin-top: 10px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Progress & Stats Bar */
+        .status-bar {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-code);
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .progress-wrapper {
+            flex: 1;
+            min-width: 200px;
+            margin: 0 15px;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 10px;
+            background: #334155;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .score-pill {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            padding: 4px 14px;
+            border-radius: 8px;
+            font-weight: 700;
+        }
+
+        /* Screens */
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.35s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Start Form */
+        .story-box {
+            background: rgba(15, 23, 42, 0.6);
+            border-left: 4px solid var(--primary);
+            padding: 16px 20px;
+            border-radius: 0 10px 10px 0;
+            margin-bottom: 24px;
+            color: #e2e8f0;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+        }
+
+        /* Code Block */
+        pre {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 16px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.95rem;
+            color: #e2e8f0;
+            margin: 14px 0;
+        }
+
+        .kw { color: #c084fc; font-weight: bold; }
+        .fn { color: #38bdf8; }
+        .num { color: #fb923c; }
+        .str { color: #4ade80; }
+        .cmt { color: #64748b; font-style: italic; }
+
+        /* Visual Array Table */
+        .array-visual {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 16px 0;
+            justify-content: center;
+        }
+
+        .array-cell {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            min-width: 72px;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .array-idx {
+            background: #27354f;
+            color: var(--primary);
+            font-family: monospace;
+            font-size: 0.85rem;
+            padding: 4px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .array-val {
+            padding: 8px;
+            font-family: monospace;
+            font-size: 1.05rem;
+            font-weight: bold;
+        }
+
+        /* Options */
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .option-btn {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 14px 18px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            background: rgba(56, 189, 248, 0.08);
+        }
+
+        .option-btn.selected {
+            border-color: var(--primary);
+            background: rgba(56, 189, 248, 0.15);
+        }
+
+        .option-btn.correct {
+            border-color: var(--success);
+            background: rgba(34, 197, 94, 0.2);
+        }
+
+        .option-btn.wrong {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .option-letter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            background: #27354f;
+            font-weight: bold;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        /* Ordering Widget */
+        .order-pool, .order-slots {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .order-slots {
+            background: rgba(11, 17, 32, 0.7);
+            border: 1px dashed var(--primary);
+            border-radius: 10px;
+            padding: 12px;
+            min-height: 120px;
+        }
+
+        .order-chip {
+            background: #27354f;
+            border: 1px solid var(--border);
+            padding: 10px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: monospace;
+            font-size: 0.95rem;
+            transition: transform 0.15s, background 0.2s;
+        }
+
+        .order-chip:hover {
+            background: #334155;
+        }
+
+        /* Buttons */
+        .btn {
+            background: var(--primary);
+            color: #0f172a;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #7dd3fc;
+        }
+
+        .btn:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: #334155;
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .actions {
+            margin-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Feedback Box */
+        .feedback {
+            margin-top: 18px;
+            padding: 14px 18px;
+            border-radius: 10px;
+            display: none;
+            font-size: 0.95rem;
+        }
+
+        .feedback.success {
+            display: block;
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid var(--success);
+            color: #bbf7d0;
+        }
+
+        .feedback.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid var(--danger);
+            color: #fecaca;
+        }
+
+        /* Result Certificate */
+        .certificate {
+            background: linear-gradient(145deg, #0f172a, #1e293b);
+            border: 2px solid var(--primary);
+            border-radius: 16px;
+            padding: 28px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .grade-circle {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: rgba(56, 189, 248, 0.15);
+            border: 4px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 18px auto;
+        }
+
+        .grade-number {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1;
+        }
+
+        .grade-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .level-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 999px;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .review-item {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            text-align: left;
+            font-size: 0.92rem;
+        }
+
+        @media print {
+            body { background: #fff; color: #000; padding: 0; }
+            .container { box-shadow: none; border: none; background: #fff; color: #000; }
+            .certificate { background: #fff; border: 2px solid #000; color: #000; }
+            .no-print { display: none !important; }
+            .review-item { background: #f8fafc; border: 1px solid #cbd5e1; color: #000; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="badge">Інформатика • 9 клас • § 3.1</div>
+        <h1>Місія «Нульовий Індекс»</h1>
+        <p class="subtitle">Інтерактивний вебквест: Одновимірні масиви та списки в Python</p>
+    </header>
+
+    <div class="status-bar" id="statusBar">
+        <div>Сектор: <strong id="stepCounter">1 / 12</strong></div>
+        <div class="progress-wrapper">
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+        </div>
+        <div class="score-pill">Оцінка: <span id="scoreDisplay">0</span> / 12 б.</div>
+    </div>
+
+    <!-- ЕКРАН 1: СТАРТ -->
+    <div class="screen active" id="startScreen">
+        <div class="story-box">
+            <strong>Легенда місії:</strong> Невідомий вірус пошкодив контролер пам'яті шкільного сервера. Усі впорядковані набори даних розсипалися! Щоб відновити роботу системи, тобі потрібно пройти <strong>12 захищених секторів</strong>. Кожен успішно відновлений сектор приносить <strong>1 бал</strong> (максимум — <strong>12 балів</strong>).
+        </div>
+
+        <div class="form-group">
+            <label for="studentName">Прізвище та ім'я учня / учениці:</label>
+            <input type="text" id="studentName" placeholder="Наприклад: Коваленко Олександр" required>
+        </div>
+
+        <div class="form-group">
+            <label for="studentClass">Клас:</label>
+            <input type="text" id="studentClass" placeholder="Наприклад: 9-А" required>
+        </div>
+
+        <button class="btn" style="width: 100%;" onclick="startQuest()">Розпочати квест ▶</button>
+    </div>
+
+    <!-- ЕКРАН 2: ЗАВДАННЯ КВЕСТУ -->
+    <div class="screen" id="questScreen">
+        <div id="questionContainer"></div>
+        <div class="feedback" id="feedbackBox"></div>
+        <div class="actions">
+            <button class="btn" id="submitBtn" onclick="checkAnswer()">Перевірити відповідь</button>
+            <button class="btn" id="nextBtn" style="display: none;" onclick="nextQuestion()">Наступний сектор ➔</button>
+        </div>
+    </div>
+
+    <!-- ЕКРАН 3: РЕЗУЛЬТАТ -->
+    <div class="screen" id="resultScreen">
+        <div class="certificate">
+            <div class="badge">СЕРТИФІКАТ ПРОХОДЖЕННЯ КВЕСТУ</div>
+            <h2 id="certName" style="margin-top: 8px; font-size: 1.5rem;"></h2>
+            <p id="certClass" style="color: var(--text-muted);"></p>
+
+            <div class="grade-circle">
+                <span class="grade-number" id="finalScore">0</span>
+                <span class="grade-label">із 12 балів</span>
+            </div>
+
+            <div class="level-badge" id="levelBadge"></div>
+            <p id="certDate" style="font-size: 0.85rem; color: var(--text-muted);"></p>
+        </div>
+
+        <div class="actions no-print" style="margin-bottom: 24px;">
+            <button class="btn" onclick="window.print()">🖨️ Зберегти сертифікат (PDF / Друк)</button>
+            <button class="btn btn-secondary" onclick="location.reload()">🔄 Пройти ще раз</button>
+        </div>
+
+        <h3 style="margin-bottom: 12px;">Детальний звіт за секторами:</h3>
+        <div id="reviewContainer"></div>
+    </div>
+</div>
+
+<script>
+    const questions = [
+        {
+            sector: "Сектор 1. Архітектура пам'яті",
+            type: "choice",
+            text: "Яке визначення точно описує поняття <strong>одновимірного масиву</strong>?",
+            options: [
+                "Упорядкований за номерами набір змінних одного типу",
+                "Довільний набір непов'язаних змінних з різними іменами",
+                "Таблиця, що складається з кількох рядків і стовпців",
+                "Цикл із лічильником для повторення команд"
+            ],
+            correct: 0,
+            explanation: "Одновимірний масив — це упорядкований за номерами набір змінних одного типу, де кожен елемент має свій номер (індекс) і значення."
+        },
+        {
+            sector: "Сектор 2. Особливості мови Python",
+            type: "choice",
+            text: "Чим тип даних <strong>список (<code>list</code>)</strong> у Python відрізняється від класичного типу <strong>масив (<code>array</code>)</strong>?",
+            options: [
+                "У списку індексація починається з 1, а в масиві — з 0",
+                "Кількість елементів списку може змінюватися під час виконання проєкту, і в ньому можуть бути дані різних типів",
+                "Списки не можна опрацьовувати в циклі for",
+                "У списку можуть зберігатися виключно цілі числа"
+            ],
+            correct: 1,
+            explanation: "Тип даних list є гнучким: кількість його елементів може збільшуватися або зменшуватися під час виконання проєкту, а елементи можуть мати різні типи."
+        },
+        {
+            sector: "Сектор 3. Правило нульового індексу",
+            type: "choice",
+            text: "У списку <code>a</code> зберігаються дані про масу <strong>100 учнів</strong> дев'ятих класів. Які імена (індекси) матимуть <strong>перший</strong> та <strong>останній</strong> елементи цього списку в Python?",
+            options: [
+                "a[1] та a[100]",
+                "a[0] та a[100]",
+                "a[0] та a[99]",
+                "a[1] та a[99]"
+            ],
+            correct: 2,
+            explanation: "У мові Python нумерація елементів завжди розпочинається з 0. Отже, для 100 елементів індекси змінюються від 0 до 99."
+        },
+        {
+            sector: "Сектор 4. Навігація за індексом",
+            type: "input",
+            text: "Дано список середніх температур за тиждень: <code>t = [4, -3.8, 0, 3.5, -4, 5.1, -2]</code>.<br>Чому дорівнює значення елемента <code>t[2*i + 1]</code>, якщо <code>i = 2</code>?",
+            visualArray: [
+                { idx: "t[0]", val: "4" },
+                { idx: "t[1]", val: "-3.8" },
+                { idx: "t[2]", val: "0" },
+                { idx: "t[3]", val: "3.5" },
+                { idx: "t[4]", val: "-4" },
+                { idx: "t[5]", val: "5.1" },
+                { idx: "t[6]", val: "-2" }
+            ],
+            placeholder: "Введіть число (наприклад: 3.5)",
+            acceptedAnswers: ["5.1", "5,1"],
+            explanation: "Підставляємо i = 2 у вираз індексу: 2 * 2 + 1 = 5. Елемент t[5] має значення 5.1."
+        },
+        {
+            sector: "Сектор 5. Модифікація елементів",
+            type: "choice",
+            text: "У програмі створено список <code>a = [10, 20, 30, 40, 50]</code>, після чого виконано команду:<br><code>a[4] = a[4] + 3</code><br>Який вигляд матиме список після виконання цієї команди?",
+            options: [
+                "[10, 20, 30, 43, 50]",
+                "[10, 20, 30, 40, 53]",
+                "[13, 23, 33, 43, 53]",
+                "[10, 20, 30, 40, 4]"
+            ],
+            correct: 1,
+            explanation: "Індекс 4 відповідає п'ятому елементу списку (числу 50). Після виконання a[4] = 50 + 3 значення стане 53."
+        },
+        {
+            sector: "Сектор 6. Поповнення порожнього списку",
+            type: "input",
+            text: "Для заповнення списку значеннями з клавіатури по одному створюють порожній список <code>a = []</code>, а в циклі додають кожне введене число <code>x</code> у кінець списку. Напишіть назву цього методу (замість <code>???</code>):",
+            code: `<span class="kw">a</span> = []\n<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">8</span>):\n    x = <span class="fn">float</span>(<span class="fn">input</span>(<span class="str">'Уведіть число > '</span>))\n    a.<strong>???</strong>(x)`,
+            placeholder: "Введіть назву методу (англійською)",
+            acceptedAnswers: ["append", "append()", ".append", ".append()"],
+            explanation: "Метод append() додає передане значення в кінець існуючого списку."
+        },
+        {
+            sector: "Сектор 7. Конвеєр введення в один рядок",
+            type: "order",
+            text: "Учень вводить елементи списку в один рядок через пропуск:<br><code>a = list(map(float, input().split()))</code><br>Натискайте на блоки нижче у <strong>правильному порядку їх виконання</strong> інтерпретатором Python (від 1-го до 4-го кроку):",
+            items: [
+                { id: "step1", label: "input() — зчитує рядок тексту з клавіатури" },
+                { id: "step2", label: ".split() — ділить рядок за пропусками на список текстів" },
+                { id: "step3", label: "map(float, ...) — перетворює кожен текст на дробове число" },
+                { id: "step4", label: "list(...) — формує остаточний список чисел" }
+            ],
+            correctOrder: ["step1", "step2", "step3", "step4"],
+            explanation: "Виконання йде зсередини назовні: спочатку input() отримує рядок, .split() розбиває його за пропусками, map() змінює тип кожного елемента на float, а list() збирає результат у список."
+        },
+        {
+            sector: "Сектор 8. Контроль довжини списку",
+            type: "input",
+            text: "Користувач увів із клавіатури в один рядок невідому заздалегідь кількість чисел у список <code>a</code>. Яку команду потрібно записати замість <code>???</code>, щоб змінна <code>n</code> отримала кількість елементів створеного списку?",
+            code: `a = <span class="fn">list</span>(<span class="fn">map</span>(<span class="fn">float</span>, <span class="fn">input</span>().<span class="fn">split</span>()))\nn = <strong>???</strong>\n<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):\n    a[i] = a[i] ** <span class="num">2</span>`,
+            placeholder: "Наприклад: count(a)",
+            acceptedAnswers: ["len(a)", "len (a)"],
+            explanation: "Функція len(a) (від англ. length — довжина) повертає кількість елементів у списку a."
+        },
+        {
+            sector: "Сектор 9. Форматоване виведення",
+            type: "choice",
+            text: "Програма обчислила список площ квадратів: <code>a = [16, 25, 36]</code>. Яка команда виведе ці числа у вікно виконання <strong>без квадратних дужок і ком</strong> (ось так: <code>16 25 36</code>)?",
+            options: [
+                "print(a)",
+                "print(*a)",
+                "print(a[0..2])",
+                "print(list(a))"
+            ],
+            correct: 1,
+            explanation: "Оператор розпакування * у команді print(*a) виводить усі елементи списку через пропуск без квадратних дужок."
+        },
+        {
+            sector: "Сектор 10. Симуляція циклу",
+            type: "input",
+            text: "Проаналізуйте фрагмент проєкту для обчислення площ квадратів за довжинами їхніх сторін. Чому дорівнюватиме значення <code>a[2]</code> після завершення циклу?",
+            code: `a = [<span class="num">4</span>, <span class="num">5</span>, <span class="num">12</span>, <span class="num">3</span>]\n<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):\n    a[i] = a[i] ** <span class="num">2</span>`,
+            placeholder: "Введіть ціле число",
+            acceptedAnswers: ["144"],
+            explanation: "Під індексом 2 знаходиться третій елемент списку — число 12. Операція піднесення до квадрата (12 ** 2) дає 144."
+        },
+        {
+            sector: "Сектор 11. Дебагінг коду",
+            type: "choice",
+            text: "У задачі потрібно збільшити кожну ціну зі списку на 10 грн. Програміст припустився помилки в 3-му рядку коду. Як правильно виправити цей рядок?",
+            code: `a = [<span class="num">60</span>, <span class="num">120</span>, <span class="num">130</span>, <span class="num">10</span>]\n<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">4</span>):\n    a = a[i] + <span class="num">10</span>   <span class="cmt"># <-- Помилка тут!</span>`,
+            options: [
+                "a[i] = a[i] + 10",
+                "a[i] = a + 10",
+                "i = a[i] + 10",
+                "a[4] = a[i] + 10"
+            ],
+            correct: 0,
+            explanation: "Звертатися потрібно до конкретного елемента за індексом i: a[i] = a[i] + 10. Інакше змінна a перестане бути списком."
+        },
+        {
+            sector: "Сектор 12. Бонус: Робота з файлами",
+            type: "input",
+            text: "Для збереження результатів опрацювання великого списку у файл <code>output.txt</code> використовують функцію <code>open('output.txt', ???)</code>. Яку літеру-режим потрібно вказати замість <code>???</code>, щоб створити файл або очистити його для запису?",
+            placeholder: "Введіть одну літеру (наприклад: r)",
+            acceptedAnswers: ["w", "'w'", "\"w\""],
+            explanation: "Режим 'w' (від англ. write — запис) відкриває файл для запису даних, створюючи його або очищуючи попередній вміст."
+        }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let selectedOption = null;
+    let userOrder = [];
+    let studentName = "";
+    let studentClass = "";
+    const resultsLog = [];
+
+    function startQuest() {
+        const nameInput = document.getElementById("studentName").value.trim();
+        const classInput = document.getElementById("studentClass").value.trim();
+
+        if (!nameInput || !classInput) {
+            alert("Будь ласка, введіть своє прізвище, ім'я та клас перед початком квесту!");
+            return;
+        }
+
+        studentName = nameInput;
+        studentClass = classInput;
+
+        document.getElementById("startScreen").classList.remove("active");
+        document.getElementById("questScreen").classList.add("active");
+        document.getElementById("statusBar").style.display = "flex";
+
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        const q = questions[currentIdx];
+        selectedOption = null;
+        userOrder = [];
+
+        document.getElementById("stepCounter").textContent = `${currentIdx + 1} / ${questions.length}`;
+        document.getElementById("progressFill").style.width = `${(currentIdx / questions.length) * 100}%`;
+        document.getElementById("scoreDisplay").textContent = score;
+
+        const feedbackBox = document.getElementById("feedbackBox");
+        feedbackBox.className = "feedback";
+        feedbackBox.innerHTML = "";
+
+        document.getElementById("submitBtn").style.display = "inline-flex";
+        document.getElementById("submitBtn").disabled = false;
+        document.getElementById("nextBtn").style.display = "none";
+
+        let html = `
+            <div class="badge" style="margin-bottom: 12px;">${q.sector} • 1 бал</div>
+            <p style="font-size: 1.1rem; margin-bottom: 12px;">${q.text}</p>
+        `;
+
+        if (q.visualArray) {
+            html += `<div class="array-visual">`;
+            q.visualArray.forEach(cell => {
+                html += `
+                    <div class="array-cell">
+                        <div class="array-idx">${cell.idx}</div>
+                        <div class="array-val">${cell.val}</div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        }
+
+        if (q.code) {
+            html += `<pre><code>${q.code}</code></pre>`;
+        }
+
+        if (q.type === "choice") {
+            const letters = ["А", "Б", "В", "Г"];
+            html += `<div class="options-list" id="optionsList">`;
+            q.options.forEach((opt, idx) => {
+                html += `
+                    <button class="option-btn" onclick="selectChoice(${idx}, this)">
+                        <span class="option-letter">${letters[idx]}</span>
+                        <span>${opt}</span>
+                    </button>
+                `;
+            });
+            html += `</div>`;
+        } else if (q.type === "input") {
+            html += `
+                <div class="form-group" style="margin-top: 16px;">
+                    <input type="text" id="textAnswer" placeholder="${q.placeholder}" autocomplete="off"
+                           onkeypress="if(event.key==='Enter') checkAnswer()">
+                </div>
+            `;
+        } else if (q.type === "order") {
+            const shuffled = [...q.items].sort(() => Math.random() - 0.5);
+            html += `
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 10px;">Обрана послідовність виконання:</p>
+                <div class="order-slots" id="orderSlots">
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">Натискайте на етапи знизу, щоб вибудувати алгоритм...</span>
+                </div>
+                <div class="order-pool" id="orderPool">
+            `;
+            shuffled.forEach(item => {
+                html += `<div class="order-chip" id="chip_${item.id}" onclick="addOrderStep('${item.id}', '${item.label}')">+ ${item.label}</div>`;
+            });
+            html += `</div>
+                <button class="btn btn-secondary" style="font-size: 0.85rem; padding: 8px 14px;" onclick="resetOrder()">↺ Скинути порядок</button>
+            `;
+        }
+
+        document.getElementById("questionContainer").innerHTML = html;
+        if (q.type === "input") {
+            setTimeout(() => document.getElementById("textAnswer").focus(), 50);
+        }
+    }
+
+    function selectChoice(idx, btnElement) {
+        if (document.getElementById("submitBtn").disabled) return;
+        selectedOption = idx;
+        document.querySelectorAll(".option-btn").forEach(b => b.classList.remove("selected"));
+        btnElement.classList.add("selected");
+    }
+
+    function addOrderStep(id, label) {
+        if (document.getElementById("submitBtn").disabled) return;
+        if (userOrder.includes(id)) return;
+
+        userOrder.push(id);
+        document.getElementById(`chip_${id}`).style.display = "none";
+        updateOrderSlots();
+    }
+
+    function resetOrder() {
+        if (document.getElementById("submitBtn").disabled) return;
+        userOrder = [];
+        document.querySelectorAll(".order-chip").forEach(c => c.style.display = "block");
+        updateOrderSlots();
+    }
+
+    function updateOrderSlots() {
+        const q = questions[currentIdx];
+        const slotsDiv = document.getElementById("orderSlots");
+        if (userOrder.length === 0) {
+            slotsDiv.innerHTML = `<span style="color: var(--text-muted); font-size: 0.9rem;">Натискайте на етапи знизу, щоб вибудувати алгоритм...</span>`;
+            return;
+        }
+        slotsDiv.innerHTML = userOrder.map((id, idx) => {
+            const itemObj = q.items.find(x => x.id === id);
+            return `<div class="order-chip" style="border-color: var(--primary); cursor: default;"><strong>${idx + 1}.</strong> ${itemObj.label}</div>`;
+        }).join("");
+    }
+
+    function checkAnswer() {
+        const q = questions[currentIdx];
+        let isCorrect = false;
+
+        if (q.type === "choice") {
+            if (selectedOption === null) {
+                alert("Оберіть один із варіантів відповіді!");
+                return;
+            }
+            isCorrect = (selectedOption === q.correct);
+            const buttons = document.querySelectorAll(".option-btn");
+            buttons.forEach((btn, idx) => {
+                btn.disabled = true;
+                if (idx === q.correct) btn.classList.add("correct");
+                else if (idx === selectedOption && !isCorrect) btn.classList.add("wrong");
+            });
+        } else if (q.type === "input") {
+            const inputEl = document.getElementById("textAnswer");
+            const val = inputEl.value.trim().toLowerCase();
+            if (!val) {
+                alert("Введіть вашу відповідь у текстове поле!");
+                return;
+            }
+            inputEl.disabled = true;
+            isCorrect = q.acceptedAnswers.some(ans => ans.toLowerCase() === val);
+        } else if (q.type === "order") {
+            if (userOrder.length < q.items.length) {
+                alert("Розташуйте всі 4 етапи у правильній послідовності!");
+                return;
+            }
+            isCorrect = JSON.stringify(userOrder) === JSON.stringify(q.correctOrder);
+        }
+
+        if (isCorrect) {
+            score++;
+            document.getElementById("scoreDisplay").textContent = score;
+        }
+
+        resultsLog.push({
+            sector: q.sector,
+            isCorrect: isCorrect,
+            explanation: q.explanation
+        });
+
+        const feedbackBox = document.getElementById("feedbackBox");
+        feedbackBox.className = isCorrect ? "feedback success" : "feedback error";
+        feedbackBox.innerHTML = `
+            <strong>${isCorrect ? "✅ Сектор відновлено! (+1 бал)" : "❌ Помилка доступу! (0 балів)"}</strong><br>
+            ${q.explanation}
+        `;
+
+        document.getElementById("submitBtn").disabled = true;
+        document.getElementById("submitBtn").style.display = "none";
+
+        const nextBtn = document.getElementById("nextBtn");
+        nextBtn.style.display = "inline-flex";
+        nextBtn.textContent = (currentIdx === questions.length - 1) ? "Отримати сертифікат 🏆" : "Наступний сектор ➔";
+    }
+
+    function nextQuestion() {
+        currentIdx++;
+        if (currentIdx < questions.length) {
+            renderQuestion();
+        } else {
+            showResults();
+        }
+    }
+
+    function showResults() {
+        document.getElementById("questScreen").classList.remove("active");
+        document.getElementById("statusBar").style.display = "none";
+        document.getElementById("resultScreen").classList.add("active");
+
+        document.getElementById("certName").textContent = studentName;
+        document.getElementById("certClass").textContent = `Клас: ${studentClass}`;
+        document.getElementById("finalScore").textContent = score;
+
+        const levelBadge = document.getElementById("levelBadge");
+        if (score >= 10) {
+            levelBadge.textContent = "Високий рівень навчальних досягнень";
+            levelBadge.style.background = "rgba(34, 197, 94, 0.2)";
+            levelBadge.style.color = "#4ade80";
+            levelBadge.style.border = "1px solid #22c55e";
+        } else if (score >= 7) {
+            levelBadge.textContent = "Достатній рівень навчальних досягнень";
+            levelBadge.style.background = "rgba(56, 189, 248, 0.2)";
+            levelBadge.style.color = "#38bdf8";
+            levelBadge.style.border = "1px solid #38bdf8";
+        } else if (score >= 4) {
+            levelBadge.textContent = "Середній рівень навчальних досягнень";
+            levelBadge.style.background = "rgba(245, 158, 11, 0.2)";
+            levelBadge.style.color = "#fbbf24";
+            levelBadge.style.border = "1px solid #f59e0b";
+        } else {
+            levelBadge.textContent = "Початковий рівень (рекомендуємо повторити § 3.1)";
+            levelBadge.style.background = "rgba(239, 68, 68, 0.2)";
+            levelBadge.style.color = "#f87171";
+            levelBadge.style.border = "1px solid #ef4444";
+        }
+
+        const now = new Date();
+        document.getElementById("certDate").textContent = `Дата виконання: ${now.toLocaleDateString('uk-UA')} • ${now.toLocaleTimeString('uk-UA', {hour: '2-digit', minute:'2-digit'})}`;
+
+        const reviewHTML = resultsLog.map(item => `
+            <div class="review-item">
+                <strong>${item.isCorrect ? "✅" : "❌"} ${item.sector}</strong> (${item.isCorrect ? "1 бал" : "0 балів"})<br>
+                <span style="color: var(--text-muted);">${item.explanation}</span>
+            </div>
+        `).join("");
+
+        document.getElementById("reviewContainer").innerHTML = reviewHTML;
+    }
+</script>
+
+</body>
+</html>
